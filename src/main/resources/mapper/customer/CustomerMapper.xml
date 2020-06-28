@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.neusoft.bookstore.customer.mapper.CustomerMapper">
+    <resultMap id="baseMap" type="com.neusoft.bookstore.customer.model.Customer">
+        <id column="id" property="id"/>
+        <result column="user_account" property="userAccount"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_sex" property="userSex"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="id_card" property="idCard"/>
+        <result column="password" property="password"/>
+        <result column="score" property="score"/>
+        <result column="is_admin" property="isAdmin"/>
+        <result column="is_delete" property="isDelete"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_time" property="updatedTime"/>
+        <result column="updated_by" property="updatedBy"/>
+
+
+    </resultMap>
+    <insert id="addCustomer" parameterType="com.neusoft.bookstore.customer.model.Customer">
+                insert into t_sys_customer
+                (
+                    user_account,
+                    user_name,
+                    user_sex,
+                    phone,
+                    email,
+                    id_card,
+                    password,
+                    score,
+                    is_admin,
+                    is_delete,
+                    created_time,
+                    created_by
+                )
+                VALUES
+                (#{userAccount},
+                #{userName},
+                #{userSex},
+                #{phone},
+                #{email},
+                #{idCard},
+                #{password},
+                #{score},
+                #{isAdmin},
+                0,
+                now(),
+                #{createdBy}
+                )
+    </insert>
+
+	<select id="findCustomerByPhoneAndAccount" parameterType="com.neusoft.bookstore.customer.model.Customer"
+            resultMap="baseMap">
+        select
+				user_account,
+				user_name,
+				user_sex,
+				phone,
+				email,
+				id_card,
+				password,
+				score,
+				is_admin,
+				is_delete,
+				created_time,
+				created_by,
+				updated_time,
+				updated_by,
+				id
+		from t_sys_customer
+        where
+            is_delete = 0
+        and
+            (user_account = #{userAccount} or phone = #{phone})
+
+    </select>
+    <select id="selectLoginCustomer" resultMap="baseMap"
+            parameterType="com.neusoft.bookstore.customer.model.Customer">
+        select
+				user_account,
+				user_name,
+				user_sex,
+				phone,
+				email,
+				id_card,
+				password,
+				score,
+				is_admin,
+				is_delete,
+				created_time,
+				created_by,
+				updated_time,
+				updated_by,
+				id
+		from t_sys_customer
+		where
+				(user_account = #{loginAccount}
+				or phone = #{loginAccount})
+				and password = #{password}
+				and is_delete = 0
+				and is_admin = #{isAdmin}
+    </select>
+    <select id="listCustomers" resultMap="baseMap" parameterType="com.neusoft.bookstore.customer.model.Customer">
+        select
+				user_account,
+				user_name,
+				user_sex,
+				phone,
+				email,
+				id_card,
+				password,
+				score,
+				is_admin,
+				is_delete,
+				created_time,
+				created_by,
+				updated_time,
+				updated_by,
+				id
+		from t_sys_customer
+		where is_delete = 0
+		<if test="userAccount != null and userAccount != ''">
+            and user_account like concat('%',#{userAccount},'%')
+        </if>
+        <if test="userName != null and userName != ''">
+            and user_name like concat('%',#{userName},'%')
+        </if>
+		<if test="isAdmin != null">
+			and is_admin = #{isAdmin}
+		</if>
+
+
+    </select>
+    <select id="findCustomerById" resultMap="baseMap" parameterType="com.neusoft.bookstore.customer.model.Customer">
+        select
+				user_account,
+				user_name,
+				user_sex,
+				phone,
+				email,
+				id_card,
+				password,
+				score,
+				is_admin,
+				is_delete,
+				created_time,
+				created_by,
+				updated_time,
+				updated_by,
+				id
+		from t_sys_customer
+		where is_delete = 0
+		and id = #{id}
+    </select>
+    <select id="findCustomerByPhoneAndAccountExOwn" resultMap="baseMap" parameterType="com.neusoft.bookstore.customer.model.Customer">
+		select
+				user_account,
+				user_name,
+				user_sex,
+				phone,
+				email,
+				id_card,
+				password,
+				score,
+				is_admin,
+				is_delete,
+				created_time,
+				created_by,
+				updated_time,
+				updated_by,
+				id
+		from t_sys_customer
+        where
+            is_delete = 0
+        and
+            (user_account = #{userAccount} or phone = #{phone})
+        and id != #{id}
+
+	</select>
+
+	<update id="updateCustomerById" parameterType="com.neusoft.bookstore.customer.model.Customer">
+		update
+			t_sys_customer
+		set
+			user_account=#{userAccount},
+			user_name=#{userName},
+			user_sex=#{userSex},
+			phone = #{phone},
+			email = #{email},
+			id_card = #{idCard},
+			score=#{score},
+			updated_time=now(),
+			updated_by=#{updatedBy}
+		where id = #{id}
+		and is_delete = 0
+	</update>
+
+
+	<update id="deleteCustomerById" parameterType="integer">
+		update
+			t_sys_customer
+		set
+			is_delete = 1,
+			updated_time=now()
+		where id = #{id}
+	</update>
+
+	<update id="updatePwdById" parameterType="map">
+		update
+			t_sys_customer
+		set
+			password = #{newPwd},
+			updated_by = #{userAccount},
+			updated_time=now()
+		where id = #{userId}
+
+	</update>
+    <update id="updateScore" parameterType="map">
+		update
+			t_sys_customer
+		set
+			score = #{score},
+			updated_by = #{userAccount},
+			updated_time=now()
+		where id = #{userId}
+	</update>
+</mapper>

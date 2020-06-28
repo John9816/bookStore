@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.neusoft.bookstore.order.mapper.OrderMapper">
+    <resultMap id="baseMap" type="com.neusoft.bookstore.order.model.Order">
+        <id column="id" property="id"></id>
+        <result column="order_user_id" property="orderUserId"></result>
+        <result column="order_code" property="orderCode"></result>
+        <result column="business_code" property="businessCode"></result>
+        <result column="order_status" property="orderStatus"></result>
+        <result column="pay_status" property="payStatus"></result>
+        <result column="order_amount" property="orderAmount"></result>
+        <result column="business_code" property="businessCode"></result>
+        <result column="is_delete" property="isDelete"></result>
+        <result column="created_time" property="createdTime"></result>
+        <result column="created_by" property="createdBy"></result>
+        <result column="updated_time" property="updatedTime"></result>
+        <result column="updated_by" property="updatedBy"></result>
+        <result column="sku_code" property="skuCode"></result>
+        <result column="sku_name" property="skuName"></result>
+        <result column="cost_price" property="costPrice"></result>
+        <result column="sale_price" property="salePrice"></result>
+        <result column="shop_num" property="shopNum"></result>
+        <result column="sku_images_path" property="skuImagesPath"></result>
+        <result column="sku_amount" property="skuAmount"></result>
+        <result column="user_account" property="userAccount"></result>
+        <result column="user_name" property="userName"></result>
+        <result column="phone" property="phone"></result>
+    </resultMap>
+
+    <insert id="addOrder" parameterType="com.neusoft.bookstore.order.model.Order">
+        insert into t_sys_order(
+        order_code,
+        business_code,
+        order_user_id,
+        order_status,
+        pay_status,
+        order_amount,
+        is_delete,
+        created_time,
+        created_by
+        )values(
+        #{orderCode},
+        #{businessCode},
+        #{orderUserId},
+        #{orderStatus},
+        #{payStatus},
+        #{orderAmount},
+        0,
+        now(),
+        #{orderUserId}
+        )
+    </insert>
+    <insert id="addOrderDetail" parameterType="com.neusoft.bookstore.order.model.OrderDetail">
+        insert into t_sys_order_details(
+        order_code,
+        sku_code,
+        shop_num,
+        sku_amount,
+        is_delete,
+        created_time,
+        created_by
+        )values(
+        #{orderCode},
+        #{skuCode},
+        #{shopNum},
+        #{skuAmount},
+        0,
+        now(),
+        #{createdBy}
+        )
+    </insert>
+
+    <select id="listOrders" resultType="com.neusoft.bookstore.order.model.Order"
+    parameterType="com.neusoft.bookstore.order.model.Order">
+select
+			tso.id id,
+            tso.order_code orderCode,
+            tso.order_amount orderAmount,
+            tso.order_status orderStatus,
+            tso.pay_status payStatus,
+            tso.business_code businessCode,
+            tso.created_time createdTime,
+            tso.created_by createdBy,
+			tsc.user_name userName,
+			tsc.user_account userAccount,
+			tsc.phone phone
+from t_sys_order tso inner join t_sys_customer tsc on tso.order_user_id = tsc.id
+where
+        tso.is_delete = 0
+       <if test="orderCode != null and orderCode != ''">
+            and order_code = #{orderCode}
+        </if>
+        <if test="orderdPerson != null and orderdPerson != ''">
+            and tsc.user_name = #{orderdPerson}
+        </if>
+        <if test="orderStatus != null and orderStatus != ''">
+            and tso.order_status = #{orderStatus}
+        </if>
+        <if test="frontPhone != null and frontPhone != ''">
+            and tsc.phone = #{frontPhone}
+        </if>
+
+    </select>
+    <select id="findOrderByOrderCode" resultMap="baseMap"
+    parameterType="string">
+select
+        tso.order_code,
+        tsgi.sku_code,
+        tsg.sku_name,
+        tsod.shop_num,
+        tsod.sku_amount,
+        tsg.sale_price,
+        tsg.cost_price,
+        tsgi.sku_images_path
+from t_sys_order_details tsod
+inner join t_sys_order tso on tso.order_code = tsod.order_code
+left join t_sys_goods_images tsgi on tsod.sku_code = tsgi.sku_code
+inner join t_sys_goods tsg on tsg.sku_code = tsod.sku_code
+where tso.order_code = #{orderCode}
+    </select>
+    <select id="findAllOrderForApp" resultMap="baseMap"
+            parameterType="string">
+        select
+			tso.id,
+            tso.order_code,
+            tso.order_amount,
+            tso.order_status,
+            tso.pay_status,
+            tso.business_code,
+            tso.created_time,
+            tso.created_by,
+			tsc.user_name,
+			tsc.user_account,
+			tsc.phone
+from t_sys_order tso inner join t_sys_customer tsc on tso.order_user_id = tsc.id
+where
+        (user_account = #{loginAccount}
+				or phone = #{loginAccount})
+		and tso.is_delete = 0
+    </select>
+</mapper>
